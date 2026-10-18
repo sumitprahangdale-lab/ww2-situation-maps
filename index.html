@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>WWII Front Lines 1944–45</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Saira+Stencil+One&display=swap">
+<style>
+/* required styles */
+
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	}
+.leaflet-container {
+	overflow: hidden;
+	}
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	-webkit-user-select: none;
+	   -moz-user-select: none;
+	        user-select: none;
+	  -webkit-user-drag: none;
+	}
+/* Prevents IE11 from highlighting tiles in blue */
+.leaflet-tile::selection {
+	background: transparent;
+}
+/* Safari renders non-retina tile on retina better with this, but Chrome is worse */
+.leaflet-safari .leaflet-tile {
+	image-rendering: -webkit-optimize-contrast;
+	}
+/* hack that prevents hw layers "stretching" when loading new tiles */
+.leaflet-safari .leaflet-tile-container {
+	width: 1600px;
+	height: 1600px;
+	-webkit-transform-origin: 0 0;
+	}
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	display: block;
+	}
+/* .leaflet-container svg: reset svg max-width decleration shipped in Joomla! (joomla.org) 3.x */
+/* .leaflet-container img: map is broken in FF if you have max-width: 100% on tiles */
+.leaflet-container .leaflet-overlay-pane svg {
+	max-width: none !important;
+	max-height: none !important;
+	}
+.leaflet-container .leaflet-marker-pane img,
+.leaflet-container .leaflet-shadow-pane img,
+.leaflet-container .leaflet-tile-pane img,
+.leaflet-container img.leaflet-image-layer,
+.leaflet-container .leaflet-tile {
+	max-width: none !important;
+	max-height: none !important;
+	width: auto;
+	padding: 0;
+	}
+
+.leaflet-container img.leaflet-tile {
+	/* See: https://bugs.chromium.org/p/chromium/issues/detail?id=600120 */
+	mix-blend-mode: plus-lighter;
+}
+
+.leaflet-container.leaflet-touch-zoom {
+	-ms-touch-action: pan-x pan-y;
+	touch-action: pan-x pan-y;
+	}
+.leaflet-container.leaflet-touch-drag {
+	-ms-touch-action: pinch-zoom;
+	/* Fallback for FF which doesn't support pinch-zoom */
+	touch-action: none;
+	touch-action: pinch-zoom;
+}
+.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom {
+	-ms-touch-action: none;
+	touch-action: none;
+}
+.leaflet-container {
+	-webkit-tap-highlight-color: transparent;
+}
+.leaflet-container a {
+	-webkit-tap-highlight-color: rgba(51, 181, 229, 0.4);
+}
+.leaflet-tile {
+	filter: inherit;
+	visibility: hidden;
+	}
+.leaflet-tile-loaded {
+	visibility: inherit;
+	}
+.leaflet-zoom-box {
+	width: 0;
+	height: 0;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	z-index: 800;
+	}
+/* workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=888319 */
+.leaflet-overlay-pane svg {
+	-moz-user-select: none;
+	}
+
+.leaflet-pane         { z-index: 400; }
+
+.leaflet-tile-pane    { z-index: 200; }
+.leaflet-overlay-pane { z-index: 400; }
+.leaflet-shadow-pane  { z-index: 500; }
+.leaflet-marker-pane  { z-index: 600; }
+.leaflet-tooltip-pane   { z-index: 650; }
+.leaflet-popup-pane   { z-index: 700; }
+
+.leaflet-map-pane canvas { z-index: 100; }
+.leaflet-map-pane svg    { z-index: 200; }
+
+.leaflet-vml-shape {
+	width: 1px;
+	height: 1px;
+	}
+.lvml {
+	behavior: none;
+	display: inline-block;
+	position: absolute;
+	}
+
+
+/* control positioning */
+
+.leaflet-control {
+	position: relative;
+	z-index: 800;
+	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+	pointer-events: auto;
+	}
+.leaflet-top,
+.leaflet-bottom {
+	position: absolute;
+	z-index: 1000;
+	pointer-events: none;
+	}
+.leaflet-top {
+	top: 0;
+	}
+.leaflet-right {
+	right: 0;
+	}
+.leaflet-bottom {
+	bottom: 0;
+	}
+.leaflet-left {
+	left: 0;
+	}
+.leaflet-control {
+	float: left;
+	clear: both;
+	}
+.leaflet-right .leaflet-control {
+	float: right;
+	}
+.leaflet-top .leaflet-control {
+	margin-top: 10px;
+	}
+.leaflet-bottom .leaflet-control {
+	margin-bottom: 10px;
+	}
+.leaflet-left .leaflet-control {
+	margin-left: 10px;
+	}
+.leaflet-right .leaflet-control {
+	margin-right: 10px;
+	}
+
+
+/* zoom and fade animations */
+
+.leaflet-fade-anim .leaflet-popup {
+	opacity: 0;
+	-webkit-transition: opacity 0.2s linear;
+	   -moz-transition: opacity 0.2s linear;
+	        transition: opacity 0.2s linear;
+	}
+.leaflet-fade-anim .leaflet-map-pane .leaflet-popup {
+	opacity: 1;
+	}
+.leaflet-zoom-animated {
+	-webkit-transform-origin: 0 0;
+	    -ms-transform-origin: 0 0;
+	        transform-origin: 0 0;
+	}
+svg.leaflet-zoom-animated {
+	will-change: transform;
+}
+
+.leaflet-zoom-anim .leaflet-zoom-animated {
+	-webkit-transition: -webkit-transform 0.25s cubic-bezier(0,0,0.25,1);
+	   -moz-transition:    -moz-transform 0.25s cubic-bezier(0,0,0.25,1);
+	        transition:         transform 0.25s cubic-bezier(0,0,0.25,1);
+	}
+.leaflet-zoom-anim .leaflet-tile,
+.leaflet-pan-anim .leaflet-tile {
+	-webkit-transition: none;
+	   -moz-transition: none;
+	        transition: none;
+	}
+
+.leaflet-zoom-anim .leaflet-zoom-hide {
+	visibility: hidden;
+	}
+
+
+/* cursors */
+
+.leaflet-interactive {
+	cursor: pointer;
+	}
+.leaflet-grab {
+	cursor: -webkit-grab;
+	cursor:    -moz-grab;
+	cursor:         grab;
+	}
+.leaflet-crosshair,
+.leaflet-crosshair .leaflet-interactive {
+	cursor: crosshair;
+	}
+.leaflet-popup-pane,
+.leaflet-control {
+	cursor: auto;
+	}
+.leaflet-dragging .leaflet-grab,
+.leaflet-dragging .leaflet-grab .leaflet-interactive,
+.leaflet-dragging .leaflet-marker-draggable {
+	cursor: move;
+	cursor: -webkit-grabbing;
+	cursor:    -moz-grabbing;
+	cursor:         grabbing;
+	}
+
+/* marker & overlays interactivity */
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-image-layer,
+.leaflet-pane > svg path,
+.leaflet-tile-container {
+	pointer-events: none;
+	}
+
+.leaflet-marker-icon.leaflet-interactive,
+.leaflet-image-layer.leaflet-interactive,
+.leaflet-pane > svg path.leaflet-interactive,
+svg.leaflet-image-layer.leaflet-interactive path {
+	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+	pointer-events: auto;
+	}
+
+/* visual tweaks */
+
+.leaflet-container {
+	background: #ddd;
+	outline-offset: 1px;
+	}
+.leaflet-container a {
+	color: #0078A8;
+	}
+.leaflet-zoom-box {
+	border: 2px dotted #38f;
+	background: rgba(255,255,255,0.5);
+	}
+
+
+/* general typography */
+.leaflet-container {
+	font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-size: 0.75rem;
+	line-height: 1.5;
+	}
+
+
+/* general toolbar styles */
+
+.leaflet-bar {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+	border-radius: 4px;
+	}
+.leaflet-bar a {
+	background-color: #fff;
+	border-bottom: 1px solid #ccc;
+	width: 26px;
+	height: 26px;
+	line-height: 26px;
+	display: block;
+	text-align: center;
+	text-decoration: none;
+	color: black;
+	}
+.leaflet-bar a,
+.leaflet-control-layers-toggle {
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+	display: block;
+	}
+.leaflet-bar a:hover,
+.leaflet-bar a:focus {
+	background-color: #f4f4f4;
+	}
+.leaflet-bar a:first-child {
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+	}
+.leaflet-bar a:last-child {
+	border-bottom-left-radius: 4px;
+	border-bottom-right-radius: 4px;
+	border-bottom: none;
+	}
+.leaflet-bar a.leaflet-disabled {
+	cursor: default;
+	background-color: #f4f4f4;
+	color: #bbb;
+	}
+
+.leaflet-touch .leaflet-bar a {
+	width: 30px;
+	height: 30px;
+	line-height: 30px;
+	}
+.leaflet-touch .leaflet-bar a:first-child {
+	border-top-left-radius: 2px;
+	border-top-right-radius: 2px;
+	}
+.leaflet-touch .leaflet-bar a:last-child {
+	border-bottom-left-radius: 2px;
+	border-bottom-right-radius: 2px;
+	}
+
+/* zoom control */
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+	font: bold 18px 'Lucida Console', Monaco, monospace;
+	text-indent: 1px;
+	}
+
+.leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out  {
+	font-size: 22px;
+	}
+
+
+/* layers control */
+
+.leaflet-control-layers {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+	background: #fff;
+	border-radius: 5px;
+	}
+.leaflet-control-layers-toggle {
+	background-image: none;
+	width: 36px;
+	height: 36px;
+	}
+.leaflet-retina .leaflet-control-layers-toggle {
+	background-image: none;
+	background-size: 26px 26px;
+	}
+.leaflet-touch .leaflet-control-layers-toggle {
+	width: 44px;
+	height: 44px;
+	}
+.leaflet-control-layers .leaflet-control-layers-list,
+.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+	display: none;
+	}
+.leaflet-control-layers-expanded .leaflet-control-layers-list {
+	display: block;
+	position: relative;
+	}
+.leaflet-control-layers-expanded {
+	padding: 6px 10px 6px 6px;
+	color: #333;
+	background: #fff;
+	}
+.leaflet-control-layers-scrollbar {
+	overflow-y: scroll;
+	overflow-x: hidden;
+	padding-right: 5px;
+	}
+.leaflet-control-layers-selector {
+	margin-top: 2px;
+	position: relative;
+	top: 1px;
+	}
+.leaflet-control-layers label {
+	display: block;
+	font-size: 13px;
+	font-size: 1.08333em;
+	}
+.leaflet-control-layers-separator {
+	height: 0;
+	border-top: 1px solid #ddd;
+	margin: 5px -10px 5px -6px;
+	}
+
+/* Default icon URLs */
+.leaflet-default-icon-path { /* used only in path-guessing heuristic, see L.Icon.Default */
+	background-image: none;
+	}
+
+
+/* attribution and scale controls */
+
+.leaflet-container .leaflet-control-attribution {
+	background: #fff;
+	background: rgba(255, 255, 255, 0.8);
+	margin: 0;
+	}
+.leaflet-control-attribution,
+.leaflet-control-scale-line {
+	padding: 0 5px;
+	color: #333;
+	line-height: 1.4;
+	}
+.leaflet-control-attribution a {
+	text-decoration: none;
+	}
+.leaflet-control-attribution a:hover,
+.leaflet-control-attribution a:focus {
+	text-decoration: underline;
+	}
+.leaflet-attribution-flag {
+	display: inline !important;
+	vertical-align: baseline !important;
+	width: 1em;
+	height: 0.6669em;
+	}
+.leaflet-left .leaflet-control-scale {
+	margin-left: 5px;
+	}
+.leaflet-bottom .leaflet-control-scale {
+	margin-bottom: 5px;
+	}
+.leaflet-control-scale-line {
+	border: 2px solid #777;
+	border-top: none;
+	line-height: 1.1;
+	padding: 2px 5px 1px;
+	white-space: nowrap;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	background: rgba(255, 255, 255, 0.8);
+	text-shadow: 1px 1px #fff;
+	}
+.leaflet-control-scale-line:not(:first-child) {
+	border-top: 2px solid #777;
+	border-bottom: none;
+	margin-top: -2px;
+	}
+.leaflet-control-scale-line:not(:first-child):not(:last-child) {
+	border-bottom: 2px solid #777;
+	}
+
+.leaflet-touch .leaflet-control-attribution,
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	box-shadow: none;
+	}
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	border: 2px solid rgba(0,0,0,0.2);
+	background-clip: padding-box;
+	}
+
+
+/* popup */
+
+.leaflet-popup {
+	position: absolute;
+	text-align: center;
+	margin-bottom: 20px;
+	}
+.leaflet-popup-content-wrapper {
+	padding: 1px;
+	text-align: left;
+	border-radius: 12px;
+	}
+.leaflet-popup-content {
+	margin: 13px 24px 13px 20px;
+	line-height: 1.3;
+	font-size: 13px;
+	font-size: 1.08333em;
+	min-height: 1px;
+	}
+.leaflet-popup-content p {
+	margin: 17px 0;
+	margin: 1.3em 0;
+	}
+.leaflet-popup-tip-container {
+	width: 40px;
+	height: 20px;
+	position: absolute;
+	left: 50%;
+	margin-top: -1px;
+	margin-left: -20px;
+	overflow: hidden;
+	pointer-events: none;
+	}
+.leaflet-popup-tip {
+	width: 17px;
+	height: 17px;
+	padding: 1px;
+
+	margin: -10px auto 0;
+	pointer-events: auto;
+
+	-webkit-transform: rotate(45deg);
+	   -moz-transform: rotate(45deg);
+	    -ms-transform: rotate(45deg);
+	        transform: rotate(45deg);
+	}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+	background: white;
+	color: #333;
+	box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+	}
+.leaflet-container a.leaflet-popup-close-button {
+	position: absolute;
+	top: 0;
+	right: 0;
+	border: none;
+	text-align: center;
+	width: 24px;
+	height: 24px;
+	font: 16px/24px Tahoma, Verdana, sans-serif;
+	color: #757575;
+	text-decoration: none;
+	background: transparent;
+	}
+.leaflet-container a.leaflet-popup-close-button:hover,
+.leaflet-container a.leaflet-popup-close-button:focus {
+	color: #585858;
+	}
+.leaflet-popup-scrolled {
+	overflow: auto;
+	}
+
+.leaflet-oldie .leaflet-popup-content-wrapper {
+	-ms-zoom: 1;
+	}
+.leaflet-oldie .leaflet-popup-tip {
+	width: 24px;
+	margin: 0 auto;
+
+	-ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678)";
+	filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678);
+	}
+
+.leaflet-oldie .leaflet-control-zoom,
+.leaflet-oldie .leaflet-control-layers,
+.leaflet-oldie .leaflet-popup-content-wrapper,
+.leaflet-oldie .leaflet-popup-tip {
+	border: 1px solid #999;
+	}
+
+
+/* div icon */
+
+.leaflet-div-icon {
+	background: #fff;
+	border: 1px solid #666;
+	}
+
+
+/* Tooltip */
+/* Base styles for the element that has a tooltip */
+.leaflet-tooltip {
+	position: absolute;
+	padding: 6px;
+	background-color: #fff;
+	border: 1px solid #fff;
+	border-radius: 3px;
+	color: #222;
+	white-space: nowrap;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	pointer-events: none;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+	}
+.leaflet-tooltip.leaflet-interactive {
+	cursor: pointer;
+	pointer-events: auto;
+	}
+.leaflet-tooltip-top:before,
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	position: absolute;
+	pointer-events: none;
+	border: 6px solid transparent;
+	background: transparent;
+	content: "";
+	}
+
+/* Directions */
+
+.leaflet-tooltip-bottom {
+	margin-top: 6px;
+}
+.leaflet-tooltip-top {
+	margin-top: -6px;
+}
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-top:before {
+	left: 50%;
+	margin-left: -6px;
+	}
+.leaflet-tooltip-top:before {
+	bottom: 0;
+	margin-bottom: -12px;
+	border-top-color: #fff;
+	}
+.leaflet-tooltip-bottom:before {
+	top: 0;
+	margin-top: -12px;
+	margin-left: -6px;
+	border-bottom-color: #fff;
+	}
+.leaflet-tooltip-left {
+	margin-left: -6px;
+}
+.leaflet-tooltip-right {
+	margin-left: 6px;
+}
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	top: 50%;
+	margin-top: -6px;
+	}
+.leaflet-tooltip-left:before {
+	right: 0;
+	margin-right: -12px;
+	border-left-color: #fff;
+	}
+.leaflet-tooltip-right:before {
+	left: 0;
+	margin-left: -12px;
+	border-right-color: #fff;
+	}
+
+/* Printing */
+
+@media print {
+	/* Prevent printers from removing background-images of controls. */
+	.leaflet-control {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+		}
+	}
+
+/* Layout: one-screen map room — map left, situation log right, timeline strip along the bottom */
+:root{
+  --bg:#e6e9e4; --panel:#f5f6f2; --fg:#1c231f; --muted:#5d675f; --rule:#c9cfc6;
+  --accent:#55652a; --accent-fg:#ffffff; --ink:#c3202b;
+  --t1:#e2730c; --t2:#b38e00; --t3:#3f8f3a; --t4:#1f8f9a; --t5:#7a6aa8;
+  --air8:#2848a8; --air9:#b02c86;
+  --sea:#cfdade; --land:#f1f2ec; --border:#8e978c; --river:#7fa1b4; --city:#3b443d;
+  --display:"Saira Stencil One","Impact","Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121613; --panel:#181d19; --fg:#e2e6de; --muted:#9aa398; --rule:#2c342e;
+  --accent:#a7b96b; --accent-fg:#141810; --ink:#ff5a57;
+  --t1:#ff9a3c; --t2:#e6c33a; --t3:#6cc163; --t4:#4cc5cf; --t5:#a99be0;
+  --air8:#86a6ff; --air9:#ff74c8;
+  --sea:#0d171b; --land:#1d231e; --border:#6d776b; --river:#3f6a80; --city:#c9cfc4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121613; --panel:#181d19; --fg:#e2e6de; --muted:#9aa398; --rule:#2c342e;
+  --accent:#a7b96b; --accent-fg:#141810; --ink:#ff5a57;
+  --t1:#ff9a3c; --t2:#e6c33a; --t3:#6cc163; --t4:#4cc5cf; --t5:#a99be0;
+  --air8:#86a6ff; --air9:#ff74c8;
+  --sea:#0d171b; --land:#1d231e; --border:#6d776b; --river:#3f6a80; --city:#c9cfc4; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+.app{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 400px;grid-template-rows:auto minmax(0,1fr) auto;
+  grid-template-areas:"head head" "map side" "time side"}
+header{grid-area:head;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;border-bottom:1px solid var(--rule);
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header h1{font-family:var(--display);font-weight:400;font-size:22px;letter-spacing:.04em;margin:0;text-wrap:balance}
+header p{margin:0;color:var(--muted);font-size:13.5px}
+#map{grid-area:map;background:var(--sea);min-height:0}
+.side{grid-area:side;background:var(--panel);border-left:1px solid var(--rule);overflow:auto;min-width:0;
+  padding-block:16px 24px;padding-left:20px;padding-right:max(20px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+.timebar{grid-area:time;border-top:1px solid var(--rule);background:var(--panel);display:flex;flex-direction:column;gap:6px;
+  padding-block:10px 12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.date{font-family:var(--display);font-size:40px;line-height:1;letter-spacing:.02em;margin:4px 0 2px}
+.dow{color:var(--muted);font-size:14px}
+.sheet{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;margin:10px 0 0}
+.sheet dt{color:var(--muted)} .sheet dd{margin:0;font-variant-numeric:tabular-nums}
+.chip{display:inline-block;font-family:var(--mono);font-size:11.5px;padding:1px 6px;border:1px solid var(--rule);border-radius:3px;margin-right:4px}
+.seg{display:flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg button{flex:1;font:inherit;font-size:13.5px;padding:7px 6px;background:transparent;color:var(--fg);border:0;border-right:1px solid var(--rule);cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.ctl{display:flex;flex-direction:column;gap:9px}
+.row{display:flex;align-items:center;gap:10px;font-size:14px;flex-wrap:wrap}
+.row input[type=range]{flex:1;accent-color:var(--accent);min-width:120px}
+.row label{cursor:pointer;display:flex;gap:8px;align-items:center}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+.trail-key{display:flex;flex-wrap:wrap;gap:6px 10px;font-family:var(--mono);font-size:12px;padding-left:24px}
+.trail-key span{display:flex;align-items:center;gap:5px}
+.trail-key i{width:18px;height:0;border-top:3px solid currentColor;display:inline-block}
+.log h3{font-family:var(--mono);font-weight:500;font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.log h3 .dot{width:10px;height:10px;border-radius:50%}
+.log p{margin:0 0 8px;max-width:62ch}
+.log .sub{font-size:13.5px;color:var(--muted)}
+.log .sub b{color:var(--fg);font-weight:600}
+.log .none{color:var(--muted);font-style:italic}
+.block{border-top:1px solid var(--rule);padding-top:12px;display:flex;flex-direction:column;gap:4px}
+.block:first-child{border-top:0;padding-top:0}
+table.tg{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;margin-top:4px}
+table.tg td{padding:3px 4px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.tg td.n{text-align:right;white-space:nowrap;color:var(--muted)}
+table.tg button{font:inherit;color:var(--fg);background:none;border:0;padding:0;text-align:left;cursor:pointer;text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:3px}
+table.tg button:hover{text-decoration-color:currentColor}
+.more{font:inherit;font-size:12.5px;color:var(--muted);background:none;border:0;padding:4px 0;cursor:pointer;text-align:left}
+.legend{display:grid;grid-template-columns:24px 1fr;gap:6px 8px;align-items:center;font-size:13px;color:var(--muted)}
+.sw{height:0;border-top:3px solid var(--ink)}
+.sw.r8{border-top:2.5px solid var(--air8)} .sw.r9{border-top:2.5px dashed var(--air9)}
+.sw.foot{height:10px;border:1.5px dashed var(--accent)}
+.sw.tr{border-top:3px solid var(--t1);box-shadow:0 5px 0 -2px var(--t3)}
+.src{font-size:12.5px;color:var(--muted);border-top:1px solid var(--rule);padding-top:12px;display:flex;flex-direction:column;gap:6px}
+.src p{margin:0}
+.src a{color:inherit}
+.tl-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tl-top button{font:inherit;font-size:14px;border:1px solid var(--rule);background:var(--bg);color:var(--fg);border-radius:6px;padding:5px 10px;cursor:pointer;min-width:38px}
+.tl-top button.play{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);min-width:74px}
+.tl-top .cur{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+.tl-top select{font:inherit;font-size:13px;background:var(--bg);color:var(--fg);border:1px solid var(--rule);border-radius:6px;padding:4px}
+.track{position:relative;height:34px}
+#slider{position:absolute;inset:0 0 auto 0;width:100%;margin:0;accent-color:var(--accent);height:22px}
+.ticks{position:absolute;left:0;right:0;top:22px;height:12px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.ticks span{position:absolute;transform:translateX(-2px);white-space:nowrap;border-left:1px solid var(--rule);padding-left:3px;line-height:12px}
+.bands{position:absolute;left:0;right:0;top:0;height:4px;display:flex;pointer-events:none;opacity:.8}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.leaflet-container{background:var(--sea);font-family:var(--body)}
+.fade{transition:opacity .7s ease}
+.mask-layer{-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+.city-lbl{font-family:var(--body);font-size:11.5px;color:var(--city);white-space:nowrap;text-shadow:0 0 3px var(--land),0 0 3px var(--land)}
+.city-lbl.big{font-weight:600;font-size:12.5px}
+.leaflet-tooltip,.leaflet-popup-content-wrapper,.leaflet-popup-tip{font-family:var(--body);background:var(--panel);color:var(--fg);border:1px solid var(--rule)}
+.leaflet-popup-content{margin:10px 12px;font-size:13.5px;line-height:1.4}
+.leaflet-popup-content b{font-weight:600}
+.leaflet-popup-content .k{color:var(--muted);font-size:12px;font-family:var(--mono);letter-spacing:.05em;text-transform:uppercase}
+.leaflet-container a.leaflet-popup-close-button{color:var(--muted)}
+.leaflet-control-zoom a{background:var(--panel)!important;color:var(--fg)!important;border-color:var(--rule)!important}
+.leaflet-bar{border-color:var(--rule)!important}
+.route{stroke-dasharray:5 6;animation:flow 1.6s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-22}}
+.mapbtn{background:var(--panel);color:var(--fg);border:1px solid var(--rule);border-radius:4px;font:inherit;font-size:13px;padding:5px 9px;cursor:pointer}
+@media (prefers-reduced-motion: reduce){.fade{transition:none}.route{animation:none}}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 58vh auto auto;grid-template-areas:"head" "map" "time" "side";height:auto}
+  html,body{height:auto}
+  .side{border-left:0;border-top:1px solid var(--rule);overflow:visible;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .date{font-size:34px}
+}
+</style>
+
+<style>*{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>WWII Front Lines 1944–45</h1>
+  </header>
+  <div id="map" role="region" aria-label="Map of France and Germany"></div>
+  <div class="timebar">
+    <div class="tl-top">
+      <button id="prev" aria-label="Previous map">◀</button>
+      <button id="play" class="play">Play</button>
+      <button id="next" aria-label="Next map">▶</button>
+      <label class="eyebrow" for="speed">Speed</label>
+      <select id="speed"><option value="2200">Slow</option><option value="1200" selected>Normal</option><option value="600">Fast</option></select>
+      <span class="cur" id="cur"></span>
+    </div>
+    <div class="track">
+      <div class="bands" id="bands"></div>
+      <input type="range" id="slider" min="0" max="97" value="0" aria-label="Map date">
+      <div class="ticks" id="ticks"></div>
+    </div>
+  </div>
+  <aside class="side">
+    <section>
+      <div class="eyebrow" id="sit">Situation as of 1200 hrs</div>
+      <div class="date" id="date">20 Jun 1944</div>
+      <div class="dow" id="dow"></div>
+      <dl class="sheet">
+        <dt>Sheet</dt><dd id="s-name"></dd>
+        <dt>Scale</dt><dd id="s-scale"></dd>
+        <dt>Fit to modern map</dt><dd id="s-acc"></dd>
+        <dt>Air targets</dt><dd id="s-air"></dd>
+      </dl>
+    </section>
+    <section class="ctl">
+      <div class="seg" role="group" aria-label="Map view">
+        <button id="v-old" aria-pressed="false">1944–45 sheet</button>
+        <button id="v-both" aria-pressed="false">Overlay</button>
+        <button id="v-new" aria-pressed="true">Modern map</button>
+      </div>
+      <div class="row"><label for="op">Historic sheet</label><input type="range" id="op" min="0" max="100" value="0"><span id="opv" class="cur">0%</span></div>
+      <div class="row"><label><input type="checkbox" id="c-ink" checked> Front line of this day, in red</label></div>
+      <div class="row"><label><input type="checkbox" id="c-trail" checked> Front lines of the previous 5 maps</label></div>
+      <div class="trail-key" id="trailkey"></div>
+      <div class="row"><label><input type="checkbox" id="c-air" checked> Air targets</label><label><input type="checkbox" id="c-route" checked> Attack routes</label></div>
+      <div class="row"><span>Route lines</span><div class="seg" role="group" aria-label="Route line style" style="flex:1"><button id="rs-curve" aria-pressed="true">Curved</button><button id="rs-straight" aria-pressed="false">Straight</button></div></div>
+      <div class="row"><label><input type="checkbox" id="c-8" checked> Eighth AF</label><label><input type="checkbox" id="c-9" checked> Ninth AF</label></div>
+      <div class="row"><label><input type="checkbox" id="c-foot" checked> Sheet footprints</label><label><input type="checkbox" id="c-follow" checked> Follow sheet</label><button class="mapbtn" id="fitall">Whole area</button></div>
+    </section>
+    <section class="log">
+      <div class="block">
+        <h3>Ground · 12th Army Group</h3>
+        <p id="g-u"></p>
+        <p class="sub" id="g-b"></p>
+        <p class="sub" id="g-s"></p>
+      </div>
+      <div class="block">
+        <h3><span class="dot" style="background:var(--air8)"></span>Air · Eighth Air Force</h3>
+        <p id="e"></p>
+        <table class="tg" id="tg8"></table>
+        <button class="more" id="more8" hidden></button>
+      </div>
+      <div class="block">
+        <h3><span class="dot" style="background:var(--air9)"></span>Air · Ninth Air Force</h3>
+        <p id="n"></p>
+        <table class="tg" id="tg9"></table>
+      </div>
+    </section>
+    <section class="legend">
+      <span class="sw"></span><span>This day's sheet: front line, boundaries and divisions as drawn by 12th Army Group.</span>
+      <span class="sw tr"></span><span>Earlier sheets, one colour per day (see the key above)</span>
+      <span class="sw r8"></span><span>Eighth Air Force: heavy bombers from England to strategic and tactical targets</span>
+      <span class="sw r9"></span><span>Ninth Air Force: medium bombers and fighter-bombers in close support</span>
+      <span class="sw foot"></span><span>Area covered by a sheet in this set</span>
+    </section>
+    <div class="src">
+      <p><b>Maps.</b> HQ 12th Army Group (HQ FUSAG until July 1944) G-3 situation maps, Library of Congress Geography &amp; Map Division (G5701.S7 svar .A4).</p>
+      <p><b>Ground.</b> Condensed from Mary H. Williams, <i>Chronology 1941–1945</i>, US Army in World War II, Center of Military History (<a href="https://ibiblio.org/hyperwar/USA/USA-SS-Chronology/index.html" target="_blank" rel="noopener">HyperWar edition</a>); a few quiet days filled in from standard histories.</p>
+      <p><b>Air.</b> Kit C. Carter &amp; Robert Mueller, <i>The Army Air Forces in World War II: Combat Chronology 1941–1945</i>, via the McKillop USAAF chronology (<a href="https://aircrewremembered.com/USAAFCombatOperations/" target="_blank" rel="noopener">Aircrew Remembered</a>). Aircraft counts are bombers attacking each target. Targets are placed at town level from GeoNames.</p>
+      <p><b>Routes are schematic:</b> each line runs from the force's base area to the target. The chronology does not record the actual courses, assembly points or turning points.</p>
+      <p><b>Modern map.</b> Natural Earth.</p>
+      <p><b>Credits.</b> Map tracing and georeferencing in QGIS by Sumit Prahangdale. Chronology data was collected and the website built with AI assistance. Work in progress: <a href="https://github.com/sumitprahangdale-lab/ww2-situation-maps" target="_blank" rel="noopener">project on GitHub</a>.</p>
+    </div>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+(async function(){
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const [D,MOD]=await Promise.all([fetch('data.json').then(r=>r.json()),fetch('modern.json').then(r=>r.json())]);
+const days=D.days, G=D.groups;
+const map=L.map('map',{zoomControl:true,attributionControl:false,minZoom:4,maxZoom:11,zoomSnap:0.25}).setView([49.5,4],5.5);
+[['land',200],['scan',300],['lines',350],['trail',400],['ink',420],['routes',560],['pts',600]].forEach(([n,z])=>map.createPane(n).style.zIndex=z);
+// ---------- modern basemap (Natural Earth) ----------
+const fc=a=>({type:'FeatureCollection',features:a.map(g=>({type:'Feature',geometry:g}))});
+const landL=L.geoJSON(fc(MOD.land),{pane:'land',interactive:false}), lakeL=L.geoJSON(fc(MOD.lake),{pane:'land',interactive:false});
+const rivL=L.geoJSON(fc(MOD.riv),{pane:'lines',interactive:false}), bndL=L.geoJSON(fc(MOD.bnd),{pane:'lines',interactive:false});
+const baseLayers=[landL,lakeL,rivL,bndL]; baseLayers.forEach(l=>l.addTo(map));
+const cityL=L.layerGroup().addTo(map); const cityM=MOD.city.map(([n,lo,la,p])=>{const m=L.marker([la,lo],{pane:'lines',interactive:false,icon:L.divIcon({className:'',html:`<span class="city-lbl${p>1e6?' big':''}">● ${esc(n)}</span>`,iconSize:null,iconAnchor:[3,7]})});m._pop=p;return m});
+function cities(){const z=map.getZoom();cityL.clearLayers();cityM.forEach(m=>{if(m._pop>(z<6?1.5e6:z<7?5e5:0))cityL.addLayer(m)})}
+map.on('zoomend',cities);cities();
+// ---------- colour-masked overlay: draws an ink layer in any theme colour ----------
+const MaskOverlay=L.ImageOverlay.extend({
+  _initImage(){const el=this._image=L.DomUtil.create('div','leaflet-image-layer mask-layer '+(this.options.className||''));
+    if(this._zoomAnimated)L.DomUtil.addClass(el,'leaflet-zoom-animated'); el.style.pointerEvents='none'; this._applyMask(); this._updateOpacity(); this._updateZIndex();},
+  _applyMask(){const el=this._image;if(!el)return;el.style.backgroundColor=css(this.options.colorVar||'--ink');const u=`url("${this._url}")`;el.style.webkitMaskImage=u;el.style.maskImage=u},
+  setUrl(u){this._url=u;this._applyMask();return this},
+  setColorVar(v){this.options.colorVar=v;this._applyMask();return this}
+});
+const BLANK='data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+const mkScan=()=>L.imageOverlay(BLANK,[[0,0],[0,0]],{pane:'scan',className:'fade',opacity:0,interactive:false}).addTo(map);
+const mkInk=(pane,v)=>new MaskOverlay(BLANK,[[0,0],[0,0]],{pane,className:'fade',opacity:0,colorVar:v}).addTo(map);
+const scan=[mkScan(),mkScan()], ink=[mkInk('ink','--ink'),mkInk('ink','--ink')]; let slot=0;
+const TR=['--t1','--t2','--t3','--t4','--t5']; const trail=TR.map(v=>mkInk('trail',v));
+// ---------- sheet footprints ----------
+const footL=L.layerGroup().addTo(map);
+const footRects=G.map((g,i)=>{const ds=days.filter(d=>d.g===i);const b=L.latLngBounds(ds[0].b);ds.forEach(d=>b.extend(d.b));
+  const r=L.rectangle(b,{pane:'lines',weight:1,dashArray:'6 5',fill:false});r.bindTooltip(`${g.id} · ${esc(g.name)}<br>${ds[0].d} to ${ds[ds.length-1].d} · ${ds.length} maps`,{sticky:true});r._i=i;footL.addLayer(r);return r});
+function styleFoot(){footRects.forEach(r=>r.setStyle({color:css('--accent'),weight:r._act?2.2:1,opacity:r._act?1:.5}))}
+// ---------- air layer ----------
+const airL=L.layerGroup().addTo(map), routeL=L.layerGroup().addTo(map);
+function arc(a,b){const [la1,lo1]=a,[la2,lo2]=b;const k=Math.cos((la1+la2)/2*Math.PI/180);const dx=(lo2-lo1)*k,dy=la2-la1,len=Math.hypot(dx,dy)||1;
+  const off=Math.min(.18*len,1.6);const cx=(lo1+lo2)/2+(-dy/len)*off/k, cy=(la1+la2)/2+(dx/len)*off;const pts=[];for(let t=0;t<=1.0001;t+=1/24){const u=1-t;pts.push([u*u*la1+2*u*t*cy+t*t*la2,(u*u*lo1+2*u*t*cx+t*t*lo2)])}return pts}
+function arrow(p,q,size){const k=Math.cos(q[0]*Math.PI/180);const dx=(q[1]-p[1])*k,dy=q[0]-p[0],l=Math.hypot(dx,dy)||1;const ux=dx/l,uy=dy/l;const s=size;
+  const back=[q[0]-uy*s,q[1]-ux*s/k];return [[q[0],q[1]],[back[0]+ux*s*.3,back[1]-uy*s*.3/k],[back[0]-ux*s*.3,back[1]+uy*s*.3/k]]}
+function line(a,b){const pts=[];for(let t=0;t<=1.0001;t+=1/12)pts.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]);return pts}
+let routeStyle='curve';
+const AFN={'8':'Eighth Air Force · strategic','9':'Ninth Air Force · tactical'};
+function drawAir(d){airL.clearLayers();routeL.clearLayers();if(!$('c-air').checked)return;
+  const show=a=>$(a.af==='8'?'c-8':'c-9').checked; const list=(d.air||[]).filter(show);
+  const sz=map.getZoom()<6?.075:map.getZoom()<7?.045:map.getZoom()<8?.028:.016;
+  // merge same base/target pairs for routes
+  if($('c-route').checked){const seen=new Map();list.forEach(a=>{const key=a.base[0]+','+a.base[1]+'>'+a.la.toFixed(2)+','+a.lo.toFixed(2);const s=seen.get(key);if(s){s.c+=a.c}else seen.set(key,{...a})});
+    seen.forEach(a=>{const col=css(a.af==='8'?'--air8':'--air9');const w=a.c?Math.max(.8,Math.min(2.4,Math.sqrt(a.c)/7)):.8;const pts=routeStyle==='straight'?line([a.base[0],a.base[1]],[a.la,a.lo]):arc([a.base[0],a.base[1]],[a.la,a.lo]);
+      L.polyline(pts,{pane:'routes',color:col,weight:w,opacity:.6,dashArray:a.af==='9'?'4 5':null,className:a.af==='8'?'route':'',interactive:false}).addTo(routeL);
+      L.polygon(arrow(pts[pts.length-3],pts[pts.length-1],sz),{pane:'routes',color:col,fillColor:col,fillOpacity:.85,weight:0,interactive:false}).addTo(routeL)});
+    const bases=new Map();list.forEach(a=>bases.set(a.base[2],a));bases.forEach(a=>L.circleMarker([a.base[0],a.base[1]],{pane:'pts',radius:5,weight:2,color:css(a.af==='8'?'--air8':'--air9'),fillColor:css('--panel'),fillOpacity:1}).bindTooltip(esc(a.base[2])).addTo(airL))}
+  list.forEach(a=>{const col=css(a.af==='8'?'--air8':'--air9');const r=a.c?Math.max(4,Math.min(13,3+Math.sqrt(a.c)/2)):4.5;
+    const m=L.circleMarker([a.la,a.lo],{pane:'pts',radius:r,weight:1.5,color:css('--panel'),fillColor:col,fillOpacity:.9});
+    m.bindTooltip(`${esc(a.n)}${a.c?' · '+a.c+' '+a.ty+'s':''}`);
+    m.bindPopup(`<div class="k">${AFN[a.af]}</div><b>${esc(a.n)}</b><br>${a.c?`${a.c} ${a.ty}s attacked`:`${a.ty} formations (number not given)`}<br><span class="k">From</span> ${esc(a.base[2])}<br><span class="k">${full(d.d).s}</span>`);
+    m.addTo(airL)})}
+map.on('zoomend',()=>drawAir(days[idx]));
+// ---------- panel ----------
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], DOW=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+function full(d){const [y,m,dd]=d.split('-');const dt=new Date(Date.UTC(1900+ +y,+m-1,+dd));return {s:`${+dd} ${MON[+m-1]} 19${y}`,dow:DOW[dt.getUTCDay()],short:`${+dd} ${MON[+m-1]}`}}
+let expanded8=false;
+function table(id,list,limit){const t=$(id);t.innerHTML='';const agg=new Map();list.forEach(a=>{const k=a.n;const s=agg.get(k);if(s){s.c+=a.c}else agg.set(k,{...a})});
+  const rows=[...agg.values()].sort((x,y)=>y.c-x.c);const shown=limit?rows.slice(0,limit):rows;
+  shown.forEach(a=>{const tr=document.createElement('tr');const b=document.createElement('button');b.textContent=a.n;b.onclick=()=>map.flyTo([a.la,a.lo],Math.max(map.getZoom(),8),{duration:.8});
+    const td1=document.createElement('td');td1.appendChild(b);const td2=document.createElement('td');td2.className='n';td2.textContent=a.c?`${a.c} ${a.ty}`:a.ty;tr.append(td1,td2);t.appendChild(tr)});
+  return rows.length}
+function panel(d){const f=full(d.d);$('date').textContent=f.s;$('dow').textContent=f.dow;$('cur').textContent=`${idx+1} / ${days.length} · ${f.s}`;
+  $('sit').textContent=d.d<'44-08-01'?'Situation · HQ FUSAG':'Situation · HQ 12th Army Group';
+  const g=G[d.g];$('s-name').innerHTML=`<span class="chip">${g.id}</span>${esc(g.name)}`;$('s-scale').textContent=g.scale;$('s-acc').textContent=`${g.acc} typical error`;
+  const a8=(d.air||[]).filter(a=>a.af==='8'),a9=(d.air||[]).filter(a=>a.af==='9');const tot=a8.reduce((s,a)=>s+a.c,0);
+  $('s-air').textContent=(d.air||[]).length?`${a8.length} Eighth AF${tot?` (${tot.toLocaleString('en-US')} bomber attacks)`:''} · ${a9.length} Ninth AF`:'none named';
+  const gr=d.ground||{};$('g-u').textContent=gr.u||'No 12th Army Group entry.';
+  $('g-b').innerHTML=gr.b?`<b>21 Army Group:</b> ${esc(gr.b)}`:'';$('g-b').hidden=!gr.b;$('g-s').innerHTML=gr.s?`<b>6th Army Group:</b> ${esc(gr.s)}`:'';$('g-s').hidden=!gr.s;
+  $('e').textContent=d.e||'No Eighth Air Force entry for this day.';$('e').className=d.e?'':'none';
+  $('n').textContent=d.n||'No Ninth Air Force entry for this day.';$('n').className=d.n?'':'none';
+  const n8=table('tg8',a8,expanded8?0:8);const mb=$('more8');mb.hidden=n8<=8;mb.textContent=expanded8?'Show fewer targets':`Show all ${n8} targets`;
+  table('tg9',a9,0);
+  // trail key
+  const tk=$('trailkey');tk.innerHTML='';if($('c-trail').checked){for(let k=1;k<=5;k++){const j=idx-k;if(j<0)break;const s=document.createElement('span');s.style.color=css(TR[k-1]);s.innerHTML=`<i></i>${full(days[j].d).short} '${days[j].d.slice(0,2)}`;tk.appendChild(s)}}
+  tk.hidden=!$('c-trail').checked||idx===0}
+$('more8').onclick=()=>{expanded8=!expanded8;panel(days[idx])};
+// ---------- state ----------
+let inkSuf='_ink'; let idx=0, view='new', scanOp=.55, lastG=-1, token=0;
+function loadImg(src){return new Promise(res=>{const im=new Image();im.onload=()=>res(src);im.onerror=()=>res(src);im.src=src})}
+function effOp(){return view==='old'?1:view==='new'?0:scanOp}
+function drawTrail(){trail.forEach((t,k)=>{const j=idx-(k+1);if(!$('c-trail').checked||j<0){t.setOpacity(0);return}const d=days[j];t.setBounds(L.latLngBounds(d.b)).setUrl(`maps/${d.d}${inkSuf}.webp`).setOpacity(.85)})}
+async function show(i,{fly}={}){
+  idx=i;const d=days[i];const t=++token;$('slider').value=i;panel(d);
+  footRects.forEach(r=>{r._act=r._i===d.g});styleFoot();
+  if($('c-follow').checked){const b=L.latLngBounds(d.b);if(fly===false)map.fitBounds(b,{padding:[20,20]});else if(lastG!==d.g||!map.getBounds().contains(b.pad(-.25)))map.flyToBounds(b,{padding:[20,20],duration:1.1})} lastG=d.g;
+  drawAir(d);
+  const src=`maps/${d.d}.webp`,isrc=`maps/${d.d}${inkSuf}.webp`;await Promise.all([loadImg(src),loadImg(isrc)]);if(t!==token)return;
+  const ns=1-slot;scan[ns].setUrl(src).setBounds(L.latLngBounds(d.b));ink[ns].setBounds(L.latLngBounds(d.b)).setUrl(isrc);
+  requestAnimationFrame(()=>{scan[ns].setOpacity(effOp());ink[ns].setOpacity($('c-ink').checked?1:0);scan[slot].setOpacity(0);ink[slot].setOpacity(0);slot=ns});
+  drawTrail();if(i+1<days.length){loadImg(`maps/${days[i+1].d}.webp`);loadImg(`maps/${days[i+1].d}${inkSuf}.webp`)}}
+function setView(v){view=v;['old','both','new'].forEach(k=>$('v-'+k).setAttribute('aria-pressed',k===v));
+  baseLayers.forEach(l=>{if(v==='old')map.removeLayer(l);else l.addTo(map)});if(v==='old')map.removeLayer(cityL);else cityL.addTo(map);
+  scan[slot].setOpacity(effOp());$('op').value=Math.round(effOp()*100);$('opv').textContent=$('op').value+'%'}
+$('v-old').onclick=()=>setView('old');$('v-both').onclick=()=>{scanOp=.55;setView('both')};$('v-new').onclick=()=>setView('new');
+$('op').oninput=e=>{scanOp=e.target.value/100;$('opv').textContent=e.target.value+'%';view=scanOp>=1?'old':scanOp<=0?'new':'both';['old','both','new'].forEach(k=>$('v-'+k).setAttribute('aria-pressed',k===view));scan[slot].setOpacity(scanOp)};
+$('c-ink').onchange=()=>ink[slot].setOpacity($('c-ink').checked?1:0);
+$('c-trail').onchange=()=>{drawTrail();panel(days[idx])};
+['c-air','c-route','c-8','c-9'].forEach(id=>$(id).onchange=()=>drawAir(days[idx]));
+['curve','straight'].forEach(v=>$('rs-'+v).onclick=()=>{routeStyle=v;['curve','straight'].forEach(k=>$('rs-'+k).setAttribute('aria-pressed',k===v));drawAir(days[idx])});
+$('c-foot').onchange=()=>$('c-foot').checked?footL.addTo(map):map.removeLayer(footL);
+$('fitall').onclick=()=>{$('c-follow').checked=false;map.flyToBounds(L.latLngBounds([[45.5,-4.9],[54.6,14.8]]),{duration:1})};
+$('slider').oninput=e=>{stop();show(+e.target.value)};
+$('prev').onclick=()=>{stop();if(idx>0)show(idx-1)};$('next').onclick=()=>{stop();if(idx<days.length-1)show(idx+1)};
+let timer=null;function stop(){clearInterval(timer);timer=null;$('play').textContent='Play'}
+$('play').onclick=()=>{if(timer){stop();return}if(idx>=days.length-1)show(0);$('play').textContent='Pause';timer=setInterval(()=>{if(idx>=days.length-1){stop();return}show(idx+1)},+$('speed').value)};
+$('speed').onchange=()=>{if(timer){stop();$('play').click()}};
+document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)&&e.target.type!=='checkbox')return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click()});
+// ---------- timeline ----------
+const n=days.length,ticks=$('ticks'),bands=$('bands');let lastM='';
+days.forEach((d,i)=>{const m=d.d.slice(0,5);if(m!==lastM){lastM=m;const s=document.createElement('span');const x=i/(n-1);s.style.left=(x*100)+'%';if(x>.9){s.style.transform='translateX(-100%)';s.style.borderLeft='0';s.style.borderRight='1px solid var(--rule)';s.style.paddingRight='3px'}s.textContent=MON[+d.d.slice(3,5)-1]+" '"+d.d.slice(0,2);ticks.appendChild(s)}});
+G.forEach((g,gi)=>{const c=days.filter(d=>d.g===gi).length;const b=document.createElement('div');b.style.flex=c;b.style.background=gi%2?'var(--accent)':'var(--muted)';b.title=g.id+' '+g.name;bands.appendChild(b)});
+requestAnimationFrame(()=>{let lastR=-1e9;[...ticks.children].forEach(s=>{const r=s.getBoundingClientRect();if(r.left<lastR+4)s.style.visibility='hidden';else lastR=r.right})});
+// ---------- theme ----------
+function restyle(){landL.setStyle({stroke:true,color:css('--border'),weight:.6,fillColor:css('--land'),fillOpacity:1});lakeL.setStyle({stroke:false,fillColor:css('--sea'),fillOpacity:1});
+  rivL.setStyle({color:css('--river'),weight:1.2,opacity:.9});bndL.setStyle({color:css('--border'),weight:1.1,dashArray:'5 4',opacity:.9});
+  styleFoot();[...ink,...trail].forEach(o=>o._applyMask());map.getContainer().style.background=css('--sea')}
+const rethe=()=>{restyle();panel(days[idx]);drawAir(days[idx])};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',rethe);
+new MutationObserver(rethe).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+restyle();
+const start=(()=>{try{const h=location.hash.slice(1);const j=days.findIndex(d=>d.d===h);return j<0?0:j}catch(e){return 0}})();
+await show(start,{fly:false});
+})();
+</script>
+
+</body>
+</html>
