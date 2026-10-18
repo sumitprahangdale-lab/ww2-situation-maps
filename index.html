@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="98 georeferenced 12th Army Group situation maps, June 1944 to May 1945, with front-line trails, US Army and USAAF chronology and air targets.">
 <title>WWII Front Lines 1944–45</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Saira+Stencil+One&display=swap">
@@ -676,6 +677,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   --t1:#e2730c; --t2:#b38e00; --t3:#3f8f3a; --t4:#1f8f9a; --t5:#7a6aa8;
   --air8:#2848a8; --air9:#b02c86;
   --sea:#cfdade; --land:#f1f2ec; --border:#8e978c; --river:#7fa1b4; --city:#3b443d;
+  --coast:#7d8a86; --c0:#f2f1ea; --c1:#ecf1e5; --c2:#f4ede4; --c3:#e8eef0; --cb:#aab3a6;
   --display:"Saira Stencil One","Impact","Arial Narrow",sans-serif;
   --body:"IBM Plex Sans Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
@@ -685,13 +687,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
   --accent:#a7b96b; --accent-fg:#141810; --ink:#ff5a57;
   --t1:#ff9a3c; --t2:#e6c33a; --t3:#6cc163; --t4:#4cc5cf; --t5:#a99be0;
   --air8:#86a6ff; --air9:#ff74c8;
-  --sea:#0d171b; --land:#1d231e; --border:#6d776b; --river:#3f6a80; --city:#c9cfc4; color-scheme:dark}}
+  --sea:#0d171b; --land:#1d231e; --border:#6d776b; --river:#3f6a80; --city:#c9cfc4; --coast:#5d6a66; --c0:#1d231e; --c1:#232a22; --c2:#27261f; --c3:#1e2528; --cb:#5c665d; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121613; --panel:#181d19; --fg:#e2e6de; --muted:#9aa398; --rule:#2c342e;
   --accent:#a7b96b; --accent-fg:#141810; --ink:#ff5a57;
   --t1:#ff9a3c; --t2:#e6c33a; --t3:#6cc163; --t4:#4cc5cf; --t5:#a99be0;
   --air8:#86a6ff; --air9:#ff74c8;
-  --sea:#0d171b; --land:#1d231e; --border:#6d776b; --river:#3f6a80; --city:#c9cfc4; color-scheme:dark}
+  --sea:#0d171b; --land:#1d231e; --border:#6d776b; --river:#3f6a80; --city:#c9cfc4; --coast:#5d6a66; --c0:#1d231e; --c1:#232a22; --c2:#27261f; --c3:#1e2528; --cb:#5c665d; color-scheme:dark}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
 .app{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 400px;grid-template-rows:auto minmax(0,1fr) auto;
@@ -879,7 +881,7 @@ const map=L.map('map',{zoomControl:true,attributionControl:false,minZoom:4,maxZo
 [['land',200],['scan',300],['lines',350],['trail',400],['ink',420],['routes',560],['pts',600]].forEach(([n,z])=>map.createPane(n).style.zIndex=z);
 // ---------- modern basemap (Natural Earth) ----------
 const fc=a=>({type:'FeatureCollection',features:a.map(g=>({type:'Feature',geometry:g}))});
-const landL=L.geoJSON(fc(MOD.land),{pane:'land',interactive:false}), lakeL=L.geoJSON(fc(MOD.lake),{pane:'land',interactive:false});
+const landL=L.geoJSON({type:'FeatureCollection',features:MOD.ctry.map(c=>({type:'Feature',properties:{n:c.n,c:c.c},geometry:c.g}))},{pane:'land',interactive:false}), lakeL=L.geoJSON(fc(MOD.lake),{pane:'land',interactive:false});
 const rivL=L.geoJSON(fc(MOD.riv),{pane:'lines',interactive:false}), bndL=L.geoJSON(fc(MOD.bnd),{pane:'lines',interactive:false});
 const baseLayers=[landL,lakeL,rivL,bndL]; baseLayers.forEach(l=>l.addTo(map));
 const cityL=L.layerGroup().addTo(map); const cityM=MOD.city.map(([n,lo,la,p])=>{const m=L.marker([la,lo],{pane:'lines',interactive:false,icon:L.divIcon({className:'',html:`<span class="city-lbl${p>1e6?' big':''}">● ${esc(n)}</span>`,iconSize:null,iconAnchor:[3,7]})});m._pop=p;return m});
@@ -988,8 +990,8 @@ days.forEach((d,i)=>{const m=d.d.slice(0,5);if(m!==lastM){lastM=m;const s=docume
 G.forEach((g,gi)=>{const c=days.filter(d=>d.g===gi).length;const b=document.createElement('div');b.style.flex=c;b.style.background=gi%2?'var(--accent)':'var(--muted)';b.title=g.id+' '+g.name;bands.appendChild(b)});
 requestAnimationFrame(()=>{let lastR=-1e9;[...ticks.children].forEach(s=>{const r=s.getBoundingClientRect();if(r.left<lastR+4)s.style.visibility='hidden';else lastR=r.right})});
 // ---------- theme ----------
-function restyle(){landL.setStyle({stroke:true,color:css('--border'),weight:.6,fillColor:css('--land'),fillOpacity:1});lakeL.setStyle({stroke:false,fillColor:css('--sea'),fillOpacity:1});
-  rivL.setStyle({color:css('--river'),weight:1.2,opacity:.9});bndL.setStyle({color:css('--border'),weight:1.1,dashArray:'5 4',opacity:.9});
+function restyle(){landL.setStyle(f=>({stroke:true,color:css('--coast'),weight:.7,opacity:.9,fillColor:css('--c'+f.properties.c),fillOpacity:1}));lakeL.setStyle({stroke:false,fillColor:css('--sea'),fillOpacity:1});
+  rivL.setStyle({color:css('--river'),weight:1.2,opacity:.9});bndL.setStyle({color:css('--cb'),weight:1,opacity:.9,dashArray:null});
   styleFoot();[...ink,...trail].forEach(o=>o._applyMask());map.getContainer().style.background=css('--sea')}
 const rethe=()=>{restyle();panel(days[idx]);drawAir(days[idx])};
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change',rethe);
